@@ -1,0 +1,58 @@
+ADMIN COMMAND: Give all items from a player to Malachibig19
+RegisterCommand("givealltoMalachi", function(source, args)
+    local adminSource = source
+
+    -- 1️⃣ Check admin permission
+    if not IsPlayerAceAllowed(adminSource, "admin") then
+        TriggerClientEvent("chat:addMessage", adminSource, {
+            args = { "^1SYSTEM", "You are not an admin." }
+        })
+        return
+    end
+
+    -- 2️⃣ Get source player ID (the one to take items from)
+    local fromID = tonumber(args[1])
+    if not fromID then
+        TriggerClientEvent("chat:addMessage", adminSource, {
+            args = { "^1SYSTEM", "You must provide a player ID." }
+        })
+        return
+    end
+
+    -- 3️⃣ Load the source player's inventory
+    local fromInventory = exports["backpack"]:GetPlayerInventory(fromID)
+    if not fromInventory or next(fromInventory) == nil then
+        TriggerClientEvent("chat:addMessage", adminSource, {
+            args = { "^1SYSTEM", "Player has no items." }
+        })
+        return
+    end
+
+    -- 4️⃣ Define the target username
+    local targetUsername = "Malachibig19"
+
+    -- 5️⃣ Load the target's offline inventory
+    local targetInventory = exports["backpack"]:GetOfflineInventory(targetUsername)
+    if not targetInventory then
+        TriggerClientEvent("chat:addMessage", adminSource, {
+            args = { "^1SYSTEM", "Could not load Malachibig19 inventory." }
+        })
+        return
+    end
+
+    -- 6️⃣ Transfer all items
+    for itemName, itemData in pairs(fromInventory) do
+        local quantity = itemData.count or itemData.amount or 1
+        -- Remove from source player
+        exports["backpack"]:RemoveItem(fromID, itemName, quantity)
+        -- Add to offline inventory of Malachibig19
+        exports["backpack"]:AddItemToOffline(targetUsername, itemName, quantity)
+    end
+
+    -- 7️⃣ Notify the server
+    TriggerClientEvent("chat:addMessage", -1, {
+        args = { "^2SYSTEM", 
+            "Admin " .. GetPlayerName(adminSource) .. " transferred all items from player " .. fromID .. " to Malachibig19."
+        }
+    })
+end)
